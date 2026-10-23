@@ -1,11 +1,7 @@
-'use client';
-
+import type { Metadata } from "next";
 import { Inter, Noto_Serif } from "next/font/google";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import WhatsAppButton from "@/components/ui/WhatsAppButton";
+import ConditionalShell from "@/components/layout/ConditionalShell";
 import "./globals.css";
-import { usePathname } from "next/navigation";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -18,23 +14,22 @@ const notoSerif = Noto_Serif({
   weight: ["400", "700"],
 });
 
+export const metadata: Metadata = {
+  title: "Casa Pellegrini",
+  description: "Un legado de belleza, historia y piezas únicas de colección",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const isAdminPage = pathname?.startsWith('/admin');
-
   return (
     <html lang="es">
       <body
         className={`${inter.variable} ${notoSerif.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}
       >
-        {!isAdminPage && <Navbar />}
-        {children}
-        {!isAdminPage && <WhatsAppButton />}
-        {!isAdminPage && <Footer />}
+        <ConditionalShell>{children}</ConditionalShell>
       </body>
     </html>
   );
