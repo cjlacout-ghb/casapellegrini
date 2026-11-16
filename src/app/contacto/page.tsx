@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+import { siteConfig } from '@/config/site';
+
+export const metadata: Metadata = {
+    title: 'Contacto',
+};
+
 export default function ContactoPage() {
     return (
         <div className="min-h-screen bg-parchment py-24 px-6 lg:px-24 text-charcoal">
@@ -15,23 +22,23 @@ export default function ContactoPage() {
                     <div className="space-y-12 border-l border-taupe/30 pl-8">
                         <div>
                             <h3 className="text-[10px] font-bold uppercase tracking-museum text-sienna mb-4">Visítenos</h3>
-                            <p className="font-serif text-2xl text-charcoal">Av. Alvear 1800</p>
-                            <p className="font-light text-charcoal/70">Recoleta, Buenos Aires, Argentina</p>
+                            <p className="font-serif text-2xl text-charcoal">{siteConfig.contact.address.street}</p>
+                            <p className="font-light text-charcoal/70">{siteConfig.contact.address.neighborhood}, {siteConfig.contact.address.city}, {siteConfig.contact.address.country}</p>
                         </div>
 
                         <div>
                             <h3 className="text-[10px] font-bold uppercase tracking-museum text-sienna mb-4">Horarios</h3>
                             <div className="space-y-2 font-light text-charcoal/70 uppercase text-[11px] tracking-widest">
-                                <p>Lunes a Viernes: 10:00 — 19:00</p>
-                                <p>Sábados: 10:00 — 14:00</p>
+                                <p>{siteConfig.contact.hours.weekdays}</p>
+                                <p>{siteConfig.contact.hours.saturday}</p>
                             </div>
                         </div>
 
                         <div>
                             <h3 className="text-[10px] font-bold uppercase tracking-museum text-sienna mb-4">Contacto Directo</h3>
-                            <p className="font-light text-charcoal/70 mb-2">+54 11 4800 1234</p>
-                            <a href="mailto:info@casapellegrini.com" className="text-sienna border-b border-sienna/30 hover:border-sienna transition-all pb-1 text-sm">
-                                info@casapellegrini.com
+                            <p className="font-light text-charcoal/70 mb-2">{siteConfig.contact.phone}</p>
+                            <a href={`mailto:${siteConfig.contact.email}`} className="text-sienna border-b border-sienna/30 hover:border-sienna transition-all pb-1 text-sm">
+                                {siteConfig.contact.email}
                             </a>
                         </div>
                     </div>
@@ -98,7 +105,7 @@ export default function ContactoPage() {
             {/* Map Placeholder */}
             <div className="max-w-7xl mx-auto mt-32 h-96 bg-sand relative grayscale hover:grayscale-0 transition-all duration-1000 border-museum rounded-lg overflow-hidden shadow-museum">
                 <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3283.473586820353!2d-58.3908290847699!3d-34.58823598046342!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x95bccaa8c32d4315%3A0x67114227914856f6!2sAv.%20Alvear%201800%2C%20C1129AAB%20CABA%2C%20Argentina!5e0!3m2!1sen!2sus!4v1645000000000!5m2!1sen!2sus"
+                    src={siteConfig.contact.address.mapEmbedUrl}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}

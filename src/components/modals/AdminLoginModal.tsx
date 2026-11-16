@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Key, User, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, Key, User, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { siteConfig } from '@/config/site';
 
 interface AdminLoginModalProps {
     isOpen: boolean;
@@ -13,9 +14,21 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+    const [isVisible, setIsVisible] = useState(isOpen);
+
+    if (isOpen !== prevIsOpen) {
+        setPrevIsOpen(isOpen);
+        if (isOpen) {
+            setIsVisible(true);
+        } else {
+            setError(false);
+            setShowPassword(false);
+        }
+    }
 
     useEffect(() => {
         if (isOpen) {
@@ -25,12 +38,15 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
                 onClose();
                 return;
             }
-            setIsVisible(true);
             document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = 'unset';
+            };
         } else {
-            const timer = setTimeout(() => setIsVisible(false), 300);
+            const timer = setTimeout(() => {
+                setIsVisible(false);
+            }, 300);
             document.body.style.overflow = 'unset';
-            setError(false);
             return () => clearTimeout(timer);
         }
     }, [isOpen, router, onClose]);
@@ -105,7 +121,7 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
                             Acceso Administrador
                         </h2>
                         <p className="text-white/40 text-sm font-light">
-                            Gestión interna de Casa Pellegrini
+                            Gestión interna de {siteConfig.brand.name}
                         </p>
                     </div>
 
@@ -146,13 +162,21 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
                                     <Lock size={18} />
                                 </div>
                                 <input
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
-                                    className={`w-full bg-black/40 border rounded-lg py-4 pl-12 pr-4 text-white font-serif placeholder:text-white/20 focus:outline-none focus:bg-black/60 transition-all ${error ? 'border-red-500/50' : 'border-white/10 focus:border-sienna/50'}`}
+                                    className={`w-full bg-black/40 border rounded-lg py-4 pl-12 pr-12 text-white font-serif placeholder:text-white/20 focus:outline-none focus:bg-black/60 transition-all ${error ? 'border-red-500/50' : 'border-white/10 focus:border-sienna/50'}`}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-sienna focus:outline-none focus-visible:text-sienna transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
                         </div>
 
@@ -187,7 +211,7 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
                         <div className="flex flex-col items-center">
                             <div className="w-12 h-[1px] bg-white/10 mb-4" />
                             <div className="text-white/20 text-[11px] tracking-[0.4em] uppercase">
-                                Casa Pellegrini
+                                {siteConfig.brand.name}
                             </div>
                         </div>
                     </div>

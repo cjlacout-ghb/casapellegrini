@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { siteConfig } from "@/config/site";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const { data: featuredItems, error } = await supabase
+  const { data: featuredItems } = await supabase
     .from('items')
     .select('*')
     .order('created_at', { ascending: false })
@@ -23,16 +24,16 @@ export default async function Home() {
         <div className="relative z-10 text-center max-w-5xl px-6">
           <div className="flex justify-center items-center gap-4 mb-8">
             <div className="h-px w-12 bg-charcoal/20"></div>
-            <span className="text-[10px] uppercase tracking-museum text-charcoal font-bold">Est. 1924</span>
+            <span className="text-[10px] uppercase tracking-museum text-charcoal font-bold">Est. {siteConfig.brand.foundedYear}</span>
             <div className="h-px w-12 bg-charcoal/20"></div>
           </div>
 
           <h1 className="text-6xl md:text-8xl font-serif font-bold mb-8 tracking-[0.2em] uppercase text-charcoal">
-            CASA PELLEGRINI
+            {siteConfig.brand.name}
           </h1>
 
           <p className="text-[10px] uppercase tracking-museum text-charcoal font-bold mb-12 opacity-90 max-w-3xl mx-auto">
-            Un legado de belleza, historia y piezas únicas de colección
+            {siteConfig.brand.tagline}
           </p>
 
           <div className="flex flex-col md:flex-row gap-8 justify-center items-center">
@@ -112,7 +113,7 @@ export default async function Home() {
       <section className="bg-charcoal text-parchment py-32 px-6 md:px-24">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-serif mb-12 leading-relaxed italic">
-            "La belleza de una pieza antigua no reside solo en su forma, sino en el eco de las historias que ha presenciado."
+            &ldquo;La belleza de una pieza antigua no reside solo en su forma, sino en el eco de las historias que ha presenciado.&rdquo;
           </h2>
           <div className="w-12 h-px bg-sienna mx-auto"></div>
         </div>

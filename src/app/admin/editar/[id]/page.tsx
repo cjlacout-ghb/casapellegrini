@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { categories } from '@/data/products';
+import { categories, ItemStatus } from '@/data/products';
 import { supabase } from '@/lib/supabase';
+import { siteConfig } from '@/config/site';
+import { getErrorMessage } from '@/lib/errors';
 import {
     ChevronLeft,
     Upload,
@@ -40,49 +42,50 @@ export default function EditarObjetoPage(props: { params: Promise<{ id: string }
         material: '',
         condition: 'Excelente / Restaurado',
         description: '',
-        status: 'Available' as const,
+        status: 'Available' as ItemStatus,
         price: '',
         show_price: true
     });
 
     useEffect(() => {
-        fetchItem();
-    }, [params.id]);
+        const fetchItem = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('items')
+                    .select('*')
+                    .eq('id', params.id)
+                    .single();
 
-    const fetchItem = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('items')
-                .select('*')
-                .eq('id', params.id)
-                .single();
-
-            if (error) throw error;
-            if (data) {
-                setFormData({
-                    title: data.name || '',
-                    category: data.category || 'Muebles',
-                    year: data.year || '',
-                    origin: data.origin || '',
-                    dimensions: data.dimensions || '',
-                    material: data.material || '',
-                    condition: data.condition || 'Excelente / Restaurado',
-                    description: data.description || '',
-                    status: data.status || 'Available',
-                    price: data.price || '',
-                    show_price: data.show_price ?? true
-                });
-                setPreviewUrl(data.image_url);
-                setOriginalImageUrl(data.image_url);
+                if (error) throw error;
+                if (data) {
+                    setFormData({
+                        title: data.name || '',
+                        category: data.category || 'Muebles',
+                        year: data.year || '',
+                        origin: data.origin || '',
+                        dimensions: data.dimensions || '',
+                        material: data.material || '',
+                        condition: data.condition || 'Excelente / Restaurado',
+                        description: data.description || '',
+                        status: data.status || 'Available',
+                        price: data.price || '',
+                        show_price: data.show_price ?? true
+                    });
+                    setPreviewUrl(data.image_url);
+                    setOriginalImageUrl(data.image_url);
+                }
+            } catch (error: unknown) {
+                const message = getErrorMessage(error);
+                console.error('Error fetching item:', message);
+                alert('No se pudo encontrar la pieza.');
+                router.push('/admin/dashboard');
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error: any) {
-            console.error('Error fetching item:', error.message);
-            alert('No se pudo encontrar la pieza.');
-            router.push('/admin/dashboard');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        };
+
+        fetchItem();
+    }, [params.id, router]);
 
     const processFile = (file: File) => {
         if (!file.type.startsWith('image/')) {
@@ -169,9 +172,10 @@ export default function EditarObjetoPage(props: { params: Promise<{ id: string }
 
             router.push('/admin/dashboard');
             router.refresh();
-        } catch (error: any) {
-            console.error('Error:', error.message);
-            alert('Error al actualizar: ' + error.message);
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
+            console.error('Error:', message);
+            alert('Error al actualizar: ' + message);
         } finally {
             setIsSaving(false);
         }
@@ -197,7 +201,12 @@ export default function EditarObjetoPage(props: { params: Promise<{ id: string }
             <aside className="w-72 bg-charcoal text-parchment flex-shrink-0 flex flex-col border-r border-white/5">
                 <div className="p-8 pt-12">
                     <h1 className="font-serif text-2xl tracking-[0.2em] font-bold text-sienna leading-tight uppercase">
-                        CASA<br />PELLEGRINI
+                        {siteConfig.brand.name.split(' ').map((word, idx) => (
+                            <span key={idx}>
+                                {idx > 0 && <br />}
+                                {word}
+                            </span>
+                        ))}
                     </h1>
                     <div className="mt-4 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-sienna animate-pulse" />
@@ -367,7 +376,12 @@ export default function EditarObjetoPage(props: { params: Promise<{ id: string }
                                             <select
                                                 className="w-full bg-transparent border-b border-sand py-4 px-1 outline-none focus:border-sienna text-sm font-medium"
                                                 value={formData.status}
-                                                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (value === 'Available' || value === 'Reserved' || value === 'Sold') {
+                                                        setFormData({ ...formData, status: value });
+                                                    }
+                                                }}
                                             >
                                                 <option value="Available">Disponible</option>
                                                 <option value="Reserved">Reservado</option>

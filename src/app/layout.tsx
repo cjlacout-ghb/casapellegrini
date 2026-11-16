@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Serif } from "next/font/google";
 import ConditionalShell from "@/components/layout/ConditionalShell";
+import { siteConfig } from "@/config/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,8 +16,11 @@ const notoSerif = Noto_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Casa Pellegrini",
-  description: "Un legado de belleza, historia y piezas únicas de colección",
+  title: {
+    default: siteConfig.metadata.title.default,
+    template: siteConfig.metadata.title.template,
+  },
+  description: siteConfig.metadata.description,
 };
 
 export default function RootLayout({

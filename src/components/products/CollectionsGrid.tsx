@@ -3,35 +3,37 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { categories } from '@/data/products';
+import { categories, CatalogItem } from '@/data/products';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/errors';
 
 export default function CollectionsGrid() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [liveProducts, setLiveProducts] = useState<any[]>([]);
+    const [liveProducts, setLiveProducts] = useState<CatalogItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
+        const fetchProducts = async () => {
+            setIsLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('items')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                setLiveProducts(data || []);
+            } catch (error: unknown) {
+                const message = getErrorMessage(error);
+                console.error('Error fetching public products:', message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchProducts();
     }, []);
-
-    const fetchProducts = async () => {
-        setIsLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('items')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setLiveProducts(data || []);
-        } catch (error: any) {
-            console.error('Error fetching public products:', error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Usar únicamente los productos de la base de datos real
     const allProducts = liveProducts.map(p => ({
@@ -57,7 +59,6 @@ export default function CollectionsGrid() {
 
     return (
         <div className="min-h-screen bg-parchment py-20 px-6 lg:px-24">
-
             {/* Minimalist Discovery Header */}
             <div className="max-w-7xl mx-auto mb-20">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-b border-taupe/30 pb-10">

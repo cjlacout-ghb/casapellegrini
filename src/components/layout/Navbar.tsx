@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { siteConfig } from '@/config/site';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -17,7 +18,7 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex-1">
                 <Link href="/" className="text-xl md:text-2xl font-serif tracking-[0.2em] font-bold text-sienna">
-                    CASA PELLEGRINI
+                    {siteConfig.brand.name}
                 </Link>
             </div>
 

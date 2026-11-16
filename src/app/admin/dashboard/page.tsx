@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
+import { CatalogItem, ItemStatus } from '@/data/products';
+import { siteConfig } from '@/config/site';
+import { getErrorMessage } from '@/lib/errors';
 import {
     FolderOpen,
     Plus,
@@ -21,31 +24,32 @@ import {
 
 export default function AdminDashboard() {
     const router = useRouter();
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<CatalogItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
+        const fetchItems = async () => {
+            setIsLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('items')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                setItems(data || []);
+            } catch (error: unknown) {
+                const message = getErrorMessage(error);
+                console.error('Error fetching items:', message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchItems();
     }, []);
-
-    const fetchItems = async () => {
-        setIsLoading(true);
-        try {
-            const { data, error } = await supabase
-                .from('items')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setItems(data || []);
-        } catch (error: any) {
-            console.error('Error fetching items:', error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleDelete = async (id: string) => {
         if (!confirm('¿Está seguro de que desea eliminar esta pieza permanentemente?')) return;
@@ -58,8 +62,9 @@ export default function AdminDashboard() {
 
             if (error) throw error;
             setItems(items.filter(item => item.id !== id));
-        } catch (error: any) {
-            alert('Error al eliminar: ' + error.message);
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
+            alert('Error al eliminar: ' + message);
         }
     };
 
@@ -68,8 +73,8 @@ export default function AdminDashboard() {
         router.push('/');
     };
 
-    const toggleStatus = async (item: any) => {
-        const nextStatus = item.status === 'Available' ? 'Reserved' : (item.status === 'Reserved' ? 'Sold' : 'Available');
+    const toggleStatus = async (item: CatalogItem) => {
+        const nextStatus: ItemStatus = item.status === 'Available' ? 'Reserved' : (item.status === 'Reserved' ? 'Sold' : 'Available');
         try {
             const { error } = await supabase
                 .from('items')
@@ -78,8 +83,9 @@ export default function AdminDashboard() {
 
             if (error) throw error;
             setItems(items.map(p => p.id === item.id ? { ...p, status: nextStatus } : p));
-        } catch (error: any) {
-            alert('Error al actualizar estado: ' + error.message);
+        } catch (error: unknown) {
+            const message = getErrorMessage(error);
+            alert('Error al actualizar estado: ' + message);
         }
     };
 
@@ -98,7 +104,12 @@ export default function AdminDashboard() {
             <aside className="w-72 bg-charcoal text-parchment flex-shrink-0 flex flex-col border-r border-white/5">
                 <div className="p-8 pt-12">
                     <h1 className="font-serif text-2xl tracking-[0.2em] font-bold text-sienna leading-tight uppercase">
-                        CASA<br />PELLEGRINI
+                        {siteConfig.brand.name.split(' ').map((word, idx) => (
+                            <span key={idx}>
+                                {idx > 0 && <br />}
+                                {word}
+                            </span>
+                        ))}
                     </h1>
                     <div className="mt-4 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-sienna animate-pulse" />

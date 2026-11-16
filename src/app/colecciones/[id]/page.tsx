@@ -1,11 +1,32 @@
-import Image from 'next/image';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ProductGallery from '@/components/products/ProductGallery';
 import { supabase } from '@/lib/supabase';
+import { siteConfig } from '@/config/site';
 
 // Forzamos que la página sea dinámica para que siempre lea de Supabase
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(props: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const params = await props.params;
+    const { data } = await supabase
+        .from('items')
+        .select('name, description')
+        .eq('id', params.id)
+        .single();
+
+    if (!data) {
+        return {
+            title: 'Pieza no encontrada',
+        };
+    }
+
+    return {
+        title: data.name,
+        description: data.description || siteConfig.metadata.description,
+    };
+}
 
 export default async function ProductDetailPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params;
@@ -139,7 +160,7 @@ export default async function ProductDetailPage(props: { params: Promise<{ id: s
                         {/* Prestige Inquiry Section */}
                         <div className="space-y-4 pt-12">
                             <a
-                                href={`https://wa.me/5491112345678?text=Hola, solicito información detallada sobre ${product.title} (Ref: #${product.id.padStart(4, '0')})`}
+                                href={`https://wa.me/${siteConfig.contact.whatsapp.number}?text=${encodeURIComponent(`Hola, solicito información detallada sobre ${product.title} (Ref: #${product.id.padStart(4, '0')})`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block w-full bg-charcoal text-white text-center py-5 uppercase tracking-museum text-[11px] font-bold hover:bg-sienna transition-all duration-500 shadow-xl rounded-lg"

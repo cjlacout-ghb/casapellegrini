@@ -1,8 +1,10 @@
 'use client';
 
+import { siteConfig } from '@/config/site';
+
 export default function WhatsAppButton() {
-    const phoneNumber = "5491112345678";
-    const message = "Hola Casa Pellegrini, me gustaría realizar una consulta.";
+    const phoneNumber = siteConfig.contact.whatsapp.number;
+    const message = siteConfig.contact.whatsapp.defaultMessage;
 
     return (
         <a
