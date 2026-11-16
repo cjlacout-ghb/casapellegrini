@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Key, User, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { X, Key, Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { siteConfig } from '@/config/site';
+import { createClient } from '@/lib/supabase/client';
+import { getErrorMessage } from '@/lib/errors';
 
 interface AdminLoginModalProps {
     isOpen: boolean;
@@ -12,7 +14,7 @@ interface AdminLoginModalProps {
 
 const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) => {
     const router = useRouter();
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState(false);
@@ -32,12 +34,6 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
 
     useEffect(() => {
         if (isOpen) {
-            // Si ya está logueado, redirigir directo
-            if (localStorage.getItem('admin_logged_in') === 'true') {
-                router.push('/admin/dashboard');
-                onClose();
-                return;
-            }
             document.body.style.overflow = 'hidden';
             return () => {
                 document.body.style.overflow = 'unset';
@@ -49,31 +45,37 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
             document.body.style.overflow = 'unset';
             return () => clearTimeout(timer);
         }
-    }, [isOpen, router, onClose]);
+    }, [isOpen]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(false);
 
-        // Client-side validation using Env Vars for this implementation
-        const validUser = process.env.NEXT_PUBLIC_ADMIN_USERNAME;
-        const validPass = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+        try {
+            const supabase = createClient();
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        if (username === validUser && password === validPass) {
-            // Guardar sesión persistente
-            localStorage.setItem('admin_logged_in', 'true');
-
-            // Success: Add a small delay for premium feel
-            setTimeout(() => {
-                onClose();
-                router.push('/admin/dashboard');
-            }, 800);
-        } else {
-            setTimeout(() => {
+            if (signInError) {
+                const message = getErrorMessage(signInError);
+                console.error('Error al iniciar sesión:', message);
                 setError(true);
                 setIsLoading(false);
-            }, 500);
+                return;
+            }
+
+            onClose();
+            router.push('/admin/dashboard');
+            router.refresh();
+        } catch (err: unknown) {
+            const message = getErrorMessage(err);
+            console.error('Error inesperado al iniciar sesión:', message);
+            setError(true);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -127,20 +129,21 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
 
                     {/* Form */}
                     <form className="w-full space-y-6" onSubmit={handleLogin}>
-                        {/* Username */}
+                        {/* Email */}
                         <div className="space-y-2">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-sienna font-bold ml-1">
-                                Nombre de Usuario
+                                Correo Electrónico
                             </label>
                             <div className="relative group">
                                 <div className={`absolute left-4 top-1/2 -translate-y-1/2 text-white/30 transition-colors ${error ? 'group-focus-within:text-red-500' : 'group-focus-within:text-sienna'}`}>
-                                    <User size={18} />
+                                    <Mail size={18} />
                                 </div>
                                 <input
-                                    type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="Ingrese su usuario"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="correo@ejemplo.com"
+                                    autoComplete="email"
                                     required
                                     className={`w-full bg-black/40 border rounded-lg py-4 pl-12 pr-4 text-white font-serif placeholder:text-white/20 focus:outline-none focus:bg-black/60 transition-all ${error ? 'border-red-500/50' : 'border-white/10 focus:border-sienna/50'}`}
                                 />
@@ -166,6 +169,7 @@ const AdminLoginModal: React.FC<AdminLoginModalProps> = ({ isOpen, onClose }) =>
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
+                                    autoComplete="current-password"
                                     required
                                     className={`w-full bg-black/40 border rounded-lg py-4 pl-12 pr-12 text-white font-serif placeholder:text-white/20 focus:outline-none focus:bg-black/60 transition-all ${error ? 'border-red-500/50' : 'border-white/10 focus:border-sienna/50'}`}
                                 />

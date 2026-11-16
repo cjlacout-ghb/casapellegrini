@@ -4,9 +4,10 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { categories, ItemStatus } from '@/data/products';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { siteConfig } from '@/config/site';
 import { getErrorMessage } from '@/lib/errors';
+import { useLogout } from '@/lib/auth';
 import {
     ChevronLeft,
     Upload,
@@ -23,6 +24,8 @@ import Image from 'next/image';
 
 export default function NuevoObjetoPage() {
     const router = useRouter();
+    const supabase = createClient();
+    const handleLogout = useLogout();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -137,10 +140,7 @@ export default function NuevoObjetoPage() {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('admin_logged_in');
-        router.push('/');
-    };
+
 
     return (
         <div className="min-h-screen bg-[#FDFCF9] flex overflow-hidden">

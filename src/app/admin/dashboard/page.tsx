@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase/client';
 import { CatalogItem, ItemStatus } from '@/data/products';
 import { siteConfig } from '@/config/site';
 import { getErrorMessage } from '@/lib/errors';
+import { useLogout } from '@/lib/auth';
 import {
     FolderOpen,
     Plus,
@@ -23,7 +23,8 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-    const router = useRouter();
+    const supabase = createClient();
+    const handleLogout = useLogout();
     const [items, setItems] = useState<CatalogItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [filter, setFilter] = useState('All');
@@ -49,7 +50,7 @@ export default function AdminDashboard() {
         };
 
         fetchItems();
-    }, []);
+    }, [supabase]);
 
     const handleDelete = async (id: string) => {
         if (!confirm('¿Está seguro de que desea eliminar esta pieza permanentemente?')) return;
@@ -68,10 +69,7 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('admin_logged_in');
-        router.push('/');
-    };
+
 
     const toggleStatus = async (item: CatalogItem) => {
         const nextStatus: ItemStatus = item.status === 'Available' ? 'Reserved' : (item.status === 'Reserved' ? 'Sold' : 'Available');
